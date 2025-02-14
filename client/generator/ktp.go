@@ -122,7 +122,7 @@ func generateRandomKTPData() KTPData {
 func GenerateKTPs(numKTPs int) {
 	// Open a CSV file for writing
 	file, err := os.Create("ktp.csv")
-	if err != nil {
+	if (err != nil) {
 		fmt.Println("Unable to create file:", err)
 		return
 	}
@@ -132,7 +132,7 @@ func GenerateKTPs(numKTPs int) {
 	defer writer.Flush()
 
 	// Write CSV header for KTP data
-	header := []string{"NIK", "Nama", "Tempat Lahir", "Tanggal Lahir", "Jenis Kelamin", "Gol. Darah", "Alamat", "RT/RW", "Kel/Desa", "Kecamatan", "Agama", "Status Perkawinan", "Pekerjaan", "Kewarganegaraan","Berlaku Hingga"}
+	header := []string{"NIK", "Nama", "Tempat Lahir", "Tanggal Lahir", "Jenis Kelamin", "Gol. Darah", "Alamat", "RT/RW", "Kel/Desa", "Kecamatan", "Agama", "Status Perkawinan", "Pekerjaan", "Kewarganegaraan", "Berlaku Hingga"}
 	writer.Write(header)
 
 	// Generate and write fake KTPs to CSV
@@ -156,6 +156,9 @@ func GenerateKTPs(numKTPs int) {
 			ktpData.ValidUntil,
 		}
 		writer.Write(record)
+
+		// Add 10ms delay to enhance randomness
+		time.Sleep(10 * time.Millisecond)
 	}
 
 	fmt.Printf("[*] Generated %d fake KTP entries and saved to ktp.csv\n", numKTPs)

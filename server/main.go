@@ -1,9 +1,9 @@
 package main
 
 import (
-	"VeilTransfer/cmd"
+    "server/cmd"
 )
 
 func main() {
-	cmd.Main()
+    cmd.Main()
 }

@@ -71,6 +71,7 @@ func GenerateCreditCards(numCards int) {
 			cardData.ExpirationDate,
 		}
 		writer.Write(record)
+		time.Sleep(10 * time.Millisecond)		
 	}
 
 	fmt.Printf("[*] Generated %d fake credit card entries and saved to credit_cards.csv\n", numCards)

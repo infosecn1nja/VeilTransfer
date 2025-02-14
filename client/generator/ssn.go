@@ -102,6 +102,7 @@ func GenerateSSNs(numSSNs int) {
 			ssnData.Address,
 		}
 		writer.Write(record)
+		time.Sleep(10 * time.Millisecond)		
 	}
 
 	fmt.Printf("[*] Generated %d fake SSNs and saved to ssns.csv\n", numSSNs)

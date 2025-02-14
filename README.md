@@ -133,7 +133,7 @@ To start the VeilTransfer server in QUIC mode, use the following command:
 ./veiltransfer_server quic -cert /path/server.crt -key /path/server.key
 ```
 
-Once the server is running, you can upload files or directories using: bash Salin Edit
+Once the server is running, you can upload files or directories using:
 ```bash
 veiltransfer_client transfer quic -localPath (/path/to/file or /path/to/directory) -server example.com:443
 ```

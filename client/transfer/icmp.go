@@ -170,8 +170,6 @@ func UploadICMP(target, path string, includePatterns []string, scheduleInterval 
 				return fmt.Errorf("\n[-] Error sending file: %s", err)
 			}
 
-			fmt.Printf("\n[*] File '%s' uploaded successfully.\n", localPath)
-
 			// If scheduling is enabled, wait before the next upload
 			if scheduleInterval > 0 {
 				fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
@@ -186,12 +184,6 @@ func UploadICMP(target, path string, includePatterns []string, scheduleInterval 
 	err = SendICMPFile(target, path)
 	if err != nil {
 		return fmt.Errorf("\n[-] Error sending file: %s", err)
-	}
-
-	// If scheduling is enabled, wait before the next upload
-	if scheduleInterval > 0 {
-		fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-		time.Sleep(time.Duration(scheduleInterval) * time.Minute)
 	}
 
 	return nil

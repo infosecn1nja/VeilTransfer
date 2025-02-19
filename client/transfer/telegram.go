@@ -4,7 +4,6 @@ import (
     "fmt"
     "os"
     "client/utils"
-    "time"
     "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -37,14 +36,6 @@ func UploadTelegram(bot *tgbotapi.BotAPI, localPath string, channelID int64, inc
         _, err = bot.Send(sendDoc)
         if err != nil {
             return fmt.Errorf("\n[-] Failed to upload file to Telegram: %s", err)
-        }
-
-        fmt.Printf("[+] Successfully uploaded: %s\n", localFilePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil

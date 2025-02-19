@@ -9,8 +9,6 @@ import (
     "os"
     "path/filepath"
     "strings"
-    "time"
-
     "client/utils"
 )
 
@@ -79,14 +77,6 @@ func UploadDropbox(accessToken, localPath, remoteDir string, includePatterns []s
         if resp.StatusCode != http.StatusOK {
             body, _ := ioutil.ReadAll(resp.Body)
             return fmt.Errorf("\n[-] Upload failed for %s with status: %s, response: %s", localFilePath, resp.Status, string(body))
-        }
-
-        fmt.Printf("[+] File uploaded successfully: %s\n", localFilePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil

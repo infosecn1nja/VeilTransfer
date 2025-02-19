@@ -5,7 +5,6 @@ import (
     "path"
     "strings"
     "os"
-    "time"
     "github.com/t3rm1n4l/go-mega"
     "client/utils"
 )
@@ -67,14 +66,6 @@ func UploadMega(username, password, localPath, remoteDir string, includePatterns
         _, err = m.UploadFile(localFilePath, currentNode, name, &progress)
         if err != nil {
             return fmt.Errorf("\n[-] Failed to upload file to Mega: %s", err)
-        }
-
-        fmt.Printf("[+] Successfully uploaded: %s\n", localFilePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil

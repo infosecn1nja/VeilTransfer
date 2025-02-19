@@ -6,7 +6,6 @@ import (
     "io/ioutil"
     "os"
     "strings"
-    "time"
     "client/utils"
     "github.com/pkg/sftp"
     "golang.org/x/crypto/ssh"
@@ -81,14 +80,6 @@ func UploadSFTP(username, password, server, localPath, remoteDir, privateKeyPath
         err = uploadFileSFTP(client, localFilePath, remoteFilePath, fileInfo)
         if err != nil {
             return fmt.Errorf("\n[-] Error uploading file: %s", err)
-        }
-
-        fmt.Printf("[+] Successfully uploaded: %s\n", localFilePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil

@@ -67,7 +67,11 @@ func WalkAndUpload(localPath, remoteDir string, includePatterns []string, upload
             err := uploadFunc(file.LocalPath, file.RemotePath)
             if err != nil {
                 fmt.Printf("[-] Error uploading %s: %s\n", file.LocalPath, err)
+            }  else {
+                fmt.Printf("[+] Successfully uploaded: %s\n", file.LocalPath)
             }
+
+            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
 
             time.Sleep(time.Duration(scheduleInterval) * time.Minute) // Wait before next upload
         }

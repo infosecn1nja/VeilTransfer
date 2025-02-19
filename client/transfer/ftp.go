@@ -5,8 +5,6 @@ import (
     "os"
     "path/filepath"
     "strings"
-    "time"
-
     "client/utils"
     "github.com/jlaffaye/ftp"
 )
@@ -66,14 +64,6 @@ func UploadFTP(username, password, server, localPath, remoteDir string, includeP
 
         progress <- int(totalSize)
         close(progress)
-
-        fmt.Printf("[+] Successfully uploaded: %s\n", localFilePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
-        }
 
         return nil
     }, scheduleInterval)

@@ -11,8 +11,6 @@ import (
     "os"
     "path/filepath"
     "strings"
-    "time"
-
     "client/utils"
 )
 
@@ -34,14 +32,6 @@ func UploadPastebin(apiDevKey, localPath string, includePatterns []string, sched
         err = uploadFileToPastebin(apiDevKey, filePath)
         if err != nil {
             return fmt.Errorf("\n[-] Error uploading to Pastebin: %s", err)
-        }
-
-        fmt.Printf("\n[*] File '%s' uploaded successfully to Pastebin.\n", filePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil

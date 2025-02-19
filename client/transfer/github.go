@@ -9,8 +9,6 @@ import (
     "os"
     "path/filepath"
     "strings"
-    "time"
-
     "client/utils"
 )
 
@@ -77,14 +75,6 @@ func UploadGithub(token, localPath string, repo string, includePatterns []string
         if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
             body, _ := ioutil.ReadAll(resp.Body)
             return fmt.Errorf("\n[-] Failed to upload file: %s, response: %s", resp.Status, string(body))
-        }
-
-        fmt.Printf("[*] Successfully uploaded %s to GitHub repository\n", localFilePath)
-
-        // If scheduling is enabled, wait before the next upload
-        if scheduleInterval > 0 {
-            fmt.Printf("[*] Waiting %d minutes before uploading next file...\n", scheduleInterval)
-            time.Sleep(time.Duration(scheduleInterval) * time.Minute)
         }
 
         return nil

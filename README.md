@@ -57,7 +57,7 @@ Easily create zip files for bundling and compressing data, which can then be use
 #### Transfer a File via SFTP
 This example demonstrates how to securely transfer a file to a remote server using the SFTP protocol. The file is located on the local machine, and it's transferred to the specified remote directory using SSH authentication.
 ```bash
-veiltransfer_client sftp -localPath (/path/to/file or /path/to/directory) -remoteDir /remote/path -server example.com:22 -username user -password pass
+veiltransfer_client transfer sftp -localPath (/path/to/file or /path/to/directory) -remoteDir /remote/path -server example.com:22 -username user -password pass
 ```
 
 #### Transfer Files to a WebDAV Server

@@ -5,13 +5,15 @@ import (
     "io"
     "io/ioutil"
     "os"
+    "path"
+    "path/filepath"
     "strings"
+
     "client/utils"
     "github.com/pkg/sftp"
     "golang.org/x/crypto/ssh"
 )
 
-// UploadSFTP uploads files to an SFTP server
 func UploadSFTP(username, password, server, localPath, remoteDir, privateKeyPath string, includePatterns []string, scheduleInterval int) error {
     var authMethods []ssh.AuthMethod
 
@@ -21,7 +23,6 @@ func UploadSFTP(username, password, server, localPath, remoteDir, privateKeyPath
             return fmt.Errorf("\n[-] Failed to read private key file: %s", err)
         }
 
-        // Attempt to parse the private key with or without a passphrase
         signer, err := ssh.ParsePrivateKey(key)
         if err != nil {
             if _, ok := err.(*ssh.PassphraseMissingError); ok {
@@ -53,46 +54,80 @@ func UploadSFTP(username, password, server, localPath, remoteDir, privateKeyPath
     }
     defer client.Close()
 
+    remoteDir = cleanRemote(remoteDir)
+
+    // Ensure base remote dir exists
     if err := ensureRemoteDir(client, remoteDir); err != nil {
         return fmt.Errorf("\n[-] Failed to ensure remote directory: %s", err)
     }
 
-    // Use WalkAndUpload for recursive directory traversal and scheduling
+    // WalkAndUpload: recursive directory traversal and scheduling
     return utils.WalkAndUpload(localPath, remoteDir, includePatterns, func(localFilePath, remoteFilePath string) error {
         localFilePath = strings.ReplaceAll(localFilePath, "\\", "/")
-        remoteFilePath = strings.ReplaceAll(remoteFilePath, "\\", "/")
+        remoteFilePath = cleanRemote(remoteFilePath)
 
         fileInfo, err := os.Stat(localFilePath)
         if err != nil {
             return fmt.Errorf("\n[-] Failed to stat local file: %s", err)
         }
 
+        // If directory => create remote directory and return
         if fileInfo.IsDir() {
-            remoteDirPath := remoteFilePath
-            if err := client.MkdirAll(remoteDirPath); err != nil {
+            if remoteFilePath == "" {
+                remoteFilePath = remoteDir
+            }
+            if err := client.MkdirAll(remoteFilePath); err != nil {
                 return fmt.Errorf("\n[-] Failed to create remote directory: %s", err)
             }
             return nil
         }
 
+        remoteFilePath = resolveRemoteFilePath(client, remoteDir, localFilePath, remoteFilePath)
+
         fmt.Printf("[*] Uploading %s to %s\n", localFilePath, remoteFilePath)
 
-        err = uploadFileSFTP(client, localFilePath, remoteFilePath, fileInfo)
-        if err != nil {
-            return fmt.Errorf("\n[-] Error uploading file: %s", err)
+        if err := uploadFileSFTP(client, localFilePath, remoteFilePath, fileInfo); err != nil {
+            return fmt.Errorf("\n[-] Error uploading %s: %s", localFilePath, err)
         }
 
         return nil
     }, scheduleInterval)
 }
 
-// uploadFileSFTP uploads a single file to SFTP with progress tracking
+func resolveRemoteFilePath(client *sftp.Client, remoteDir, localFilePath, remoteFilePath string) string {
+    base := filepath.Base(localFilePath)
+
+    // If empty, just use remoteDir/base
+    if remoteFilePath == "" {
+        return path.Join(remoteDir, base)
+    }
+
+    if strings.HasSuffix(remoteFilePath, "/") {
+        return path.Join(remoteFilePath, base)
+    }
+
+    if remoteFilePath == remoteDir {
+        return path.Join(remoteDir, base)
+    }
+
+    if st, err := client.Stat(remoteFilePath); err == nil && st.IsDir() {
+        return path.Join(remoteFilePath, base)
+    }
+
+    return remoteFilePath
+}
+
 func uploadFileSFTP(client *sftp.Client, localFilePath, remoteFilePath string, fileInfo os.FileInfo) error {
     srcFile, err := os.Open(localFilePath)
     if err != nil {
         return fmt.Errorf("\n[-] Failed to open source file: %s", err)
     }
     defer srcFile.Close()
+
+    parent := path.Dir(remoteFilePath)
+    if parent != "." && parent != "/" {
+        _ = client.MkdirAll(parent)
+    }
 
     dstFile, err := client.Create(remoteFilePath)
     if err != nil {
@@ -105,16 +140,16 @@ func uploadFileSFTP(client *sftp.Client, localFilePath, remoteFilePath string, f
     totalSize := fileInfo.Size()
 
     for {
-        n, err := srcFile.Read(buf)
-        if err != nil && err != io.EOF {
-            return err
+        n, rerr := srcFile.Read(buf)
+        if rerr != nil && rerr != io.EOF {
+            return fmt.Errorf("\n[-] Failed to read source file: %s", rerr)
         }
         if n == 0 {
             break
         }
 
-        if _, err := dstFile.Write(buf[:n]); err != nil {
-            return fmt.Errorf("\n[-] Failed to write to destination file: %s", err)
+        if _, werr := dstFile.Write(buf[:n]); werr != nil {
+            return fmt.Errorf("\n[-] Failed to write to destination file: %s", werr)
         }
 
         total += int64(n)
@@ -125,9 +160,8 @@ func uploadFileSFTP(client *sftp.Client, localFilePath, remoteFilePath string, f
     return nil
 }
 
-// ensureRemoteDir ensures the remote directory exists
 func ensureRemoteDir(client *sftp.Client, remoteDir string) error {
-    remoteDir = strings.ReplaceAll(remoteDir, "\\", "/")
+    remoteDir = cleanRemote(remoteDir)
 
     if _, err := client.Stat(remoteDir); err != nil {
         if os.IsNotExist(err) {
@@ -139,4 +173,16 @@ func ensureRemoteDir(client *sftp.Client, remoteDir string) error {
         }
     }
     return nil
+}
+
+func cleanRemote(p string) string {
+    p = strings.TrimSpace(p)
+    p = strings.ReplaceAll(p, "\\", "/")
+    if len(p) > 1 {
+        p = strings.TrimRight(p, "/")
+    }
+    if p == "" {
+        return "/"
+    }
+    return p
 }
